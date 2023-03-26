@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './resources/auth/auth.module';
 import { BookmarkModule } from './resources/bookmark/bookmark.module';
 import { UserModule } from './resources/user/user.module';
+import { UserService } from './resources/user/user.service';
 
 @Module({
   imports: [
@@ -13,9 +14,11 @@ import { UserModule } from './resources/user/user.module';
     UserModule,
     BookmarkModule,
     DatabaseModule,
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, UserService],
 })
 export class AppModule {}
