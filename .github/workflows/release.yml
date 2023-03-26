@@ -20,8 +20,6 @@ jobs:
       - run: npm install -g yarn
       - run: yarn
       - run: yarn build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: nick-fields/retry@v2
         with:
           max_attempts: 3
@@ -29,3 +27,5 @@ jobs:
           retry_on: error
           retry_wait_seconds: 300
           command: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
