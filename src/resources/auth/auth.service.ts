@@ -7,11 +7,17 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable({})
 export class AuthService {
-  constructor(private db: DatabaseService) {}
+  constructor(
+    private db: DatabaseService,
+    private jwt: JwtService,
+    private config: ConfigService,
+  ) {}
 
   async handleRegistration(dto: AuthDto): Promise<IAuthRes | never> {
     const hashPassword = await getHashedPassword(dto.password);
@@ -24,13 +30,11 @@ export class AuthService {
           password: hashPassword,
         },
       });
-
-      delete user.password;
-
+      const access_token = await this.getAccessToken(user.id, user.email);
       return {
         code: 'SUCCESS',
         message: 'Registration successful',
-        user,
+        access_token,
       };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -47,24 +51,31 @@ export class AuthService {
     const user = await this.db.user.findFirst({
       where: { email: dto.email },
     });
-
     // if user is not found throw exception
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
     // check if password matches
     const valid = await comparePassword(dto.password, user.password);
-
     if (!valid) {
       throw new ForbiddenException('Invalid password');
     }
-    delete user.password;
-
+    const access_token = await this.getAccessToken(user.id, user.email);
     return {
       code: 'SUCCESS',
       message: 'Login successful',
-      user,
+      access_token,
     };
+  }
+
+  private getAccessToken(userId: string, email: string): Promise<string> {
+    const payload = {
+      sub: userId,
+      email: email,
+    };
+    return this.jwt.signAsync(payload, {
+      expiresIn: '15m',
+      secret: this.config.get('JWT_SECRET'),
+    });
   }
 }
