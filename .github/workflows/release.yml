@@ -20,6 +20,12 @@ jobs:
       - run: npm install -g yarn
       - run: yarn
       - run: yarn build
-      - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: nick-fields/retry@v2
+        with:
+          max_attempts: 3
+          timeout_seconds: 600
+          retry_on: error
+          retry_wait_seconds: 300
+          command: npx semantic-release
