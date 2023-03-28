@@ -10,6 +10,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Sessions {
+  id            Int      @id() @default(autoincrement())
+  user          User     @relation(fields: [user_id], references: [id])
+  user_id       String   @unique()
+  refresh_token String
+  is_blocked    Boolean  @default(false)
+  ip            String
+  user_agent    String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt()
+
+  @@map("sessions")
+}
+
 model User {
   id         String     @id @default(uuid())
   username   String
@@ -18,8 +32,9 @@ model User {
   first_name String?
   last_name  String?
   Bookmark   Bookmark[]
+  Sessions   Sessions?
   created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
+  updated_at DateTime   @updatedAt()
 
   @@map("users")
 }
@@ -32,7 +47,7 @@ model Bookmark {
   description String?
   url         String?
   created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  updated_at  DateTime @updatedAt()
 
   @@map("bookmarks")
 }
