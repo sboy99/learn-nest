@@ -1,7 +1,6 @@
 import { DatabaseService } from '@/database/database.service';
-import { AuthDto } from '@/dto';
-import { IAuthRes } from '@/interfaces/auth.interface';
-import { comparePassword, getHashedPassword } from '@/lib/utils';
+import { SigninDto, SignupDto } from '@/dto';
+import { IAuthRes, IReqInfo, ITokens } from '@/interfaces';
 import {
   ForbiddenException,
   Injectable,
@@ -10,6 +9,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import * as bcryptjs from 'bcryptjs';
 
 @Injectable({})
 export class AuthService {
@@ -19,9 +19,8 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async handleRegistration(dto: AuthDto): Promise<IAuthRes | never> {
-    const hashPassword = await getHashedPassword(dto.password);
-
+  async signupLocal(req: IReqInfo, dto: SignupDto): Promise<IAuthRes | never> {
+    const hashPassword = await this.getHashedPassword(dto.password);
     try {
       const user = await this.db.user.create({
         data: {
@@ -30,11 +29,12 @@ export class AuthService {
           password: hashPassword,
         },
       });
-      const access_token = await this.getAccessToken(user.id, user.email);
+      const tokens = await this.getTokens(user.id, user.email);
+      await this.createSession(req, user.id, tokens.refresh_token);
       return {
         code: 'SUCCESS',
         message: 'Registration successful',
-        access_token,
+        ...tokens,
       };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -46,7 +46,7 @@ export class AuthService {
     }
   }
 
-  async handleLogin(dto: Omit<AuthDto, 'username'>): Promise<IAuthRes | never> {
+  async signinLocal(req: IReqInfo, dto: SigninDto): Promise<IAuthRes | never> {
     // find user by email address
     const user = await this.db.user.findFirst({
       where: { email: dto.email },
@@ -56,26 +56,92 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
     // check if password matches
-    const valid = await comparePassword(dto.password, user.password);
+    const valid = await this.comparePassword(dto.password, user.password);
     if (!valid) {
       throw new ForbiddenException('Invalid password');
     }
-    const access_token = await this.getAccessToken(user.id, user.email);
+    const tokens = await this.getTokens(user.id, user.email);
+    await this.createSession(req, user.id, tokens.refresh_token);
     return {
       code: 'SUCCESS',
       message: 'Login successful',
-      access_token,
+      ...tokens,
     };
   }
 
-  private getAccessToken(userId: string, email: string): Promise<string> {
+  async logoutLocal(userId: string) {
+    await this.deleteSession(userId);
+    return {
+      message: 'user logged out',
+    };
+  }
+
+  refreshToken() {
+    return {
+      message: 'token refreshed',
+    };
+  }
+
+  private async getTokens(userId: string, email: string): Promise<ITokens> {
     const payload = {
       sub: userId,
       email: email,
     };
-    return this.jwt.signAsync(payload, {
-      expiresIn: '15m',
-      secret: this.config.get('JWT_SECRET'),
+
+    const [at, rt] = await Promise.all([
+      this.jwt.signAsync(payload, {
+        expiresIn: '15m',
+        secret: this.config.get('JWT_SECRET'),
+      }),
+      this.jwt.signAsync(payload, {
+        expiresIn: '7day',
+        secret: this.config.get('JWT_SECRET'),
+      }),
+    ]);
+
+    return {
+      access_token: at,
+      refresh_token: rt,
+    };
+  }
+
+  async createSession(req: IReqInfo, user_id: string, refresh_token: string) {
+    const hashRt = await this.getHashedPassword(refresh_token);
+    return this.db.sessions.upsert({
+      where: {
+        user_id,
+      },
+      create: {
+        ip: req.ip,
+        refresh_token: hashRt,
+        user_agent: req.userAgent,
+        user_id,
+      },
+      update: {
+        ip: req.ip,
+        refresh_token: hashRt,
+        user_agent: req.userAgent,
+      },
     });
+  }
+
+  deleteSession(user_id: string) {
+    return this.db.sessions.deleteMany({
+      where: {
+        user_id,
+      },
+    });
+  }
+
+  // utility
+  async getHashedPassword(pwd: string): Promise<string> {
+    const salt = await bcryptjs.genSalt(10);
+    const hash = await bcryptjs.hash(pwd, salt);
+    return hash;
+  }
+
+  async comparePassword(pwd: string, hash: string): Promise<boolean> {
+    const isMatch = await bcryptjs.compare(pwd, hash);
+    return isMatch;
   }
 }
