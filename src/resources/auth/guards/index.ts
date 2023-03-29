@@ -1,1 +1,1 @@
-export * from './accessToken.guard';
+export * from './token.guard';
