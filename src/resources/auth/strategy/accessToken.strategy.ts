@@ -1,4 +1,5 @@
 import { DatabaseService } from '@/database/database.service';
+import { IJwtUser } from '@/interfaces';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
@@ -12,14 +13,14 @@ export class AccessTokenStrategy extends PassportStrategy(
   constructor(config: ConfigService, private readonly db: DatabaseService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.get('JWT_SECRET'),
+      secretOrKey: config.get('JWT_ACCESS_SECRET'),
     });
   }
-  async validate(payload: { sub: string; email: string }) {
-    const user = {
-      id: payload.sub,
+
+  validate(payload: { sub: string; email: string }): IJwtUser {
+    return {
+      userId: payload.sub,
       email: payload.email,
     };
-    return user;
   }
 }
