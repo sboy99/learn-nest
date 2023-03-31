@@ -1,6 +1,6 @@
 import { ReqInfo, User } from '@/decorators';
 import { SigninDto, SignupDto } from '@/dto';
-import { IReqInfo } from '@/interfaces';
+import { IJwtUser, IReqInfo } from '@/interfaces';
 import {
   Body,
   Controller,
@@ -45,7 +45,7 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Get('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshToken() {
-    return this.authService.refreshToken();
+  refreshToken(@User() user: IJwtUser) {
+    return this.authService.refreshToken(user);
   }
 }

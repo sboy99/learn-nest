@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './resources/auth/auth.module';
 import { BookmarkModule } from './resources/bookmark/bookmark.module';
@@ -18,7 +16,6 @@ import { UserService } from './resources/user/user.service';
       isGlobal: true,
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService, UserService],
+  providers: [UserService],
 })
 export class AppModule {}
