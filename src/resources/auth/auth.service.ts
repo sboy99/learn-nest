@@ -1,10 +1,11 @@
 import { DatabaseService } from '@/database/database.service';
 import { SigninDto, SignupDto } from '@/dto';
-import { IAuthRes, IReqInfo, ITokens } from '@/interfaces';
+import { IAuthRes, IJwtUser, IReqInfo, ITokens } from '@/interfaces';
 import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -75,13 +76,38 @@ export class AuthService {
       message: 'user logged out',
     };
   }
-
-  refreshToken() {
+  /**
+   * Refresh all tokens
+   * @param user IJwtPayload
+   * @returns
+   */
+  async refreshToken(user: IJwtUser): Promise<IAuthRes | never> {
+    const session = await this.db.sessions.findUnique({
+      where: {
+        user_id: user.userId,
+      },
+    });
+    if (!session) throw new ForbiddenException('Access Denied');
+    const hasValidRefreshToken = await this.comparePassword(
+      user.refreshToken,
+      session.refresh_token,
+    );
+    if (!hasValidRefreshToken || session.is_blocked) {
+      throw new UnauthorizedException('You are not authorized');
+    }
+    const tokens = await this.getTokens(user.userId, user.email);
     return {
+      code: 'SUCCESS',
       message: 'token refreshed',
+      ...tokens,
     };
   }
-
+  /**
+   * Get Access and Refresh tokens
+   * @param userId string
+   * @param email string
+   * @returns ITokens: {access_token:string,refresh_token:string}
+   */
   private async getTokens(userId: string, email: string): Promise<ITokens> {
     const payload = {
       sub: userId,
@@ -91,11 +117,11 @@ export class AuthService {
     const [at, rt] = await Promise.all([
       this.jwt.signAsync(payload, {
         expiresIn: '15m',
-        secret: this.config.get('JWT_SECRET'),
+        secret: this.config.get('JWT_ACCESS_SECRET'),
       }),
       this.jwt.signAsync(payload, {
         expiresIn: '7day',
-        secret: this.config.get('JWT_SECRET'),
+        secret: this.config.get('JWT_REFRESH_SECRET'),
       }),
     ]);
 
