@@ -1,16 +1,41 @@
 version: '3.8'
+
 services:
-  nest-learn-db:
+  # API Backend
+  api:
+    build: ./
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+    env_file:
+      - .env
+    networks:
+      - nest-network
+  # Database
+  db:
     image: postgres
     ports:
       - 5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: learn-nest
+    volumes:
+      - postgres_vol:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     networks:
       - nest-network
+# Network
 networks:
   nest-network:
+# Volume
 volumes:
-  nest-db:
+  postgres_vol:
