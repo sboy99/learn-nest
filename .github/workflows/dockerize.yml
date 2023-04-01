@@ -1,0 +1,17 @@
+name: Publish Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dockerize:
+    name: Build and push Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker-practice/actions-setup-docker@master
+        timeout-minutes: 30
+      - run: docker compose build
+      - run: docker build -t sagarbera/nest-learn:1.0 .
+      - run: docker push sagarbera/nest-learn:1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
