@@ -8,25 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # dockerize:
-  #   name: Build and push Docker images
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Set up Docker
-  #       uses: docker-practice/actions-setup-docker@master
-  #       timeout-minutes: 30
-  #     - name: Set Up Checkout
-  #       uses: actions/checkout@v2
-  #     - run: ls -a
-  #     - name: Docker build
-  #       run: docker build -t sagarbera/nest-learn:1.0 ./
-  #     - name: Docker Login
-  #       run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_TOKEN }} docker.io
-  #     - name: Dockerhub push
-  #       run: docker push sagarbera/nest-learn:1.0
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  build-push:
+  dockerize:
     env:
       IMAGE: sagarbera/nest-learn
     runs-on: ubuntu-latest
