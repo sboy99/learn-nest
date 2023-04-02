@@ -1,6 +1,10 @@
 name: Publish Image
 
 on:
+  push:
+    branches:
+      - main
+      - test-github-action
   workflow_dispatch:
 
 jobs:
@@ -11,6 +15,7 @@ jobs:
       - uses: docker-practice/actions-setup-docker@master
         timeout-minutes: 30
       - run: docker build -t sagarbera/nest-learn:1.0 .
+      - run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }} docker.io
       - run: docker push sagarbera/nest-learn:1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
