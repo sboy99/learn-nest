@@ -14,8 +14,12 @@ jobs:
     steps:
       - uses: docker-practice/actions-setup-docker@master
         timeout-minutes: 30
-      - run: docker build -t sagarbera/nest-learn:1.0 .
-      - run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }} docker.io
-      - run: docker push sagarbera/nest-learn:1.0
+      - run: ls -a
+      - name: Docker build
+        run: docker build -t sagarbera/nest-learn:1.0 ./
+      - name: Docker Login
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }} docker.io
+      - name: Dockerhub push
+        run: docker push sagarbera/nest-learn:1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
