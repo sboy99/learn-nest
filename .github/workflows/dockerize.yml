@@ -32,6 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # These are prerequisites for the docker build step
+      - name: Set Up Checkout
+        uses: actions/checkout@v2
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -42,9 +44,8 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build and publish container image with tag
-        uses: docker/build-push-action@v2
-        run: ls -a
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v4.0.0
         with:
           push: true
           context: .
