@@ -12,8 +12,11 @@ jobs:
     name: Build and push Docker images
     runs-on: ubuntu-latest
     steps:
-      - uses: docker-practice/actions-setup-docker@master
+      - name: Set up Docker
+        uses: docker-practice/actions-setup-docker@master
         timeout-minutes: 30
+      - name: Set Up Checkout
+        uses: actions/checkout@v2
       - run: ls -a
       - name: Docker build
         run: docker build -t sagarbera/nest-learn:1.0 ./
