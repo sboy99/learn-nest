@@ -1,6 +1,6 @@
 import { ReqInfo, User } from '@/decorators';
 import { SigninDto, SignupDto } from '@/dto';
-import { IJwtUser, IReqInfo } from '@/interfaces';
+import { IJwtUser, IReqInfo, IRes, ITokens } from '@/interfaces';
 import {
   Body,
   Controller,
@@ -10,7 +10,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { User as TUser } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { AccessTokenGuard, RefreshTokenGuard } from './guards';
 
@@ -22,8 +21,21 @@ export class AuthController {
    * @returns registration data
    */
   @Post('local/signup')
-  signupLocal(@ReqInfo() req: IReqInfo, @Body() dto: SignupDto) {
-    return this.authService.signupLocal(req, dto);
+  async signupLocal(
+    @ReqInfo() req: IReqInfo,
+    @Body() dto: SignupDto,
+  ): Promise<IRes<unknown, ITokens>> {
+    const { access_token, refresh_token, user } =
+      await this.authService.signupLocal(dto);
+    await this.authService.createSession(req, user.id, refresh_token);
+    return {
+      code: 'SUCCESS',
+      message: 'successfully signed up',
+      tokens: {
+        access_token,
+        refresh_token,
+      },
+    };
   }
   /**
    *
@@ -31,21 +43,52 @@ export class AuthController {
    */
   @Post('local/signin')
   @HttpCode(HttpStatus.OK)
-  signinLocal(@ReqInfo() req: IReqInfo, @Body() dto: SigninDto) {
-    return this.authService.signinLocal(req, dto);
+  async signinLocal(
+    @ReqInfo() req: IReqInfo,
+    @Body() dto: SigninDto,
+  ): Promise<IRes<unknown, ITokens>> {
+    const { refresh_token, access_token, user } =
+      await this.authService.signinLocal(dto);
+    await this.authService.createSession(req, user.id, refresh_token);
+
+    return {
+      code: 'SUCCESS',
+      message: 'success',
+      tokens: {
+        access_token,
+        refresh_token,
+      },
+    };
   }
 
   @UseGuards(AccessTokenGuard)
   @Get('local/logout')
   @HttpCode(HttpStatus.OK)
-  logout(@User() user: TUser) {
-    return this.authService.logoutLocal(user.id);
+  logout(@User('userId') userId: IJwtUser['userId']) {
+    return this.authService.logoutLocal(userId);
   }
 
   @UseGuards(RefreshTokenGuard)
   @Get('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshToken(@User() user: IJwtUser) {
-    return this.authService.refreshToken(user);
+  async refreshToken(
+    @User() user: IJwtUser,
+    @ReqInfo() req: IReqInfo,
+  ): Promise<IRes<unknown, ITokens>> {
+    const tokens = await this.authService.refreshToken(user);
+    await this.authService.createSession(
+      req,
+      user.userId,
+      tokens.refresh_token,
+    );
+
+    return {
+      code: 'SUCCESS',
+      message: '',
+      tokens: {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+      },
+    };
   }
 }
