@@ -1,5 +1,4 @@
 import { DatabaseService } from '@/database/database.service';
-import { SigninDto, SignupDto } from '@/dto';
 import { IJwtUser, IReqInfo, ITokens } from '@/interfaces';
 import {
   ForbiddenException,
@@ -12,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User as TUser } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as bcryptjs from 'bcryptjs';
+import { SigninDto, SignupDto } from './dto';
 
 @Injectable({})
 export class AuthService {

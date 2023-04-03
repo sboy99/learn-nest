@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
+import { BookmarkModule } from './bookmark/bookmark.module';
 import { DatabaseModule } from './database/database.module';
-import { AuthModule } from './resources/auth/auth.module';
-import { BookmarkModule } from './resources/bookmark/bookmark.module';
-import { UserModule } from './resources/user/user.module';
-import { UserService } from './resources/user/user.service';
+import { UserModule } from './user/user.module';
+import { UserService } from './user/user.service';
 
 @Module({
   imports: [
