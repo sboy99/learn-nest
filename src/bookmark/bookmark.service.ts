@@ -24,8 +24,9 @@ export class BookmarkService {
     return bookmark;
   }
 
-  findAll() {
-    return `This action returns all bookmark`;
+  async findAll(): Promise<Bookmark[]> {
+    const bookmarks = await this.db.bookmark.findMany({});
+    return bookmarks;
   }
 
   findOne(id: number) {
