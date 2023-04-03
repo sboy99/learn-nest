@@ -89,12 +89,10 @@ export class AuthService {
       },
     });
     if (!session) throw new ForbiddenException('Access Denied');
-    console.log(user.refreshToken, '||', session.refresh_token);
     const hasValidRefreshToken = await this.comparePassword(
-      user.refreshToken,
+      user.refreshToken.split('.')[2], // as last section of jwt changes so this is getting targeted due to limitation of bcrypt
       session.refresh_token,
     );
-    console.log(hasValidRefreshToken);
 
     if (!hasValidRefreshToken || session.is_blocked) {
       throw new UnauthorizedException('You are not authorized');
@@ -131,8 +129,7 @@ export class AuthService {
   }
 
   async createSession(req: IReqInfo, user_id: string, refresh_token: string) {
-    const hashRt = await this.getHashedPassword(String(refresh_token));
-    console.log({ refresh_token, hashRt });
+    const hashRt = await this.getHashedPassword(refresh_token.split('.')[2]);
     return this.db.sessions.upsert({
       where: {
         user_id,
