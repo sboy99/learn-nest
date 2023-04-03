@@ -62,7 +62,21 @@ export class BookmarkService {
     return mBookmark;
   }
 
-  remove(id: Bookmark['id']) {
-    return `This action removes a #${id} bookmark`;
+  async remove(
+    bookmarkId: Bookmark['id'],
+    userId: IJwtUser['userId'],
+  ): Promise<void | never> {
+    const bookmark = await this.db.bookmark.findFirst({
+      where: {
+        id: bookmarkId,
+        user_id: userId,
+      },
+    });
+    if (!bookmark) throw new NotFoundException('Bookmark not found');
+    await this.db.bookmark.delete({
+      where: {
+        id: bookmarkId,
+      },
+    });
   }
 }

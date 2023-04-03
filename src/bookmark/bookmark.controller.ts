@@ -78,9 +78,17 @@ export class BookmarkController {
       data: uBookmark,
     };
   }
-
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bookmarkService.remove(id);
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  async remove(
+    @Param('id') id: string,
+    @User('userId') userId: IJwtUser['userId'],
+  ): Promise<IRes> {
+    await this.bookmarkService.remove(id, userId);
+    return {
+      code: 'SUCCESS',
+      message: ' Successfully deleted bookmark',
+    };
   }
 }
