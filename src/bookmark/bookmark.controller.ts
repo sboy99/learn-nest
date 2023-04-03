@@ -51,8 +51,13 @@ export class BookmarkController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bookmarkService.findOne(+id);
+  async findOne(@Param('id') id: string): Promise<IRes<Bookmark>> {
+    const bookmark = await this.bookmarkService.findOne(id);
+    return {
+      code: 'SUCCESS',
+      message: 'Successfully found bookmark',
+      data: bookmark,
+    };
   }
 
   @Patch(':id')
@@ -60,11 +65,11 @@ export class BookmarkController {
     @Param('id') id: string,
     @Body() updateBookmarkDto: UpdateBookmarkDto,
   ) {
-    return this.bookmarkService.update(+id, updateBookmarkDto);
+    return this.bookmarkService.update(id, updateBookmarkDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.bookmarkService.remove(+id);
+    return this.bookmarkService.remove(id);
   }
 }
