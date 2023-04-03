@@ -1,6 +1,6 @@
 import { DatabaseService } from '@/database/database.service';
 import { IJwtUser } from '@/interfaces';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Bookmark } from '@prisma/client';
 import { CreateBookmarkDto } from './dto/create-bookmark.dto';
 import { UpdateBookmarkDto } from './dto/update-bookmark.dto';
@@ -29,15 +29,22 @@ export class BookmarkService {
     return bookmarks;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} bookmark`;
+  async findOne(bookmarkId: Bookmark['id']): Promise<Bookmark> {
+    const bookmark = await this.db.bookmark.findFirst({
+      where: {
+        id: bookmarkId,
+      },
+    });
+
+    if (!bookmark) throw new NotFoundException('No bookmark found');
+    return bookmark;
   }
 
-  update(id: number, updateBookmarkDto: UpdateBookmarkDto) {
+  update(id: Bookmark['id'], updateBookmarkDto: UpdateBookmarkDto) {
     return `This action updates a #${id} bookmark`;
   }
 
-  remove(id: number) {
+  remove(id: Bookmark['id']) {
     return `This action removes a #${id} bookmark`;
   }
 }
