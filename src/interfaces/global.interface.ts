@@ -3,7 +3,7 @@ export interface IResMessage {
   message: string;
 }
 
-export interface IRes<TData = unknown, TToken = unknown> extends IResMessage {
+export interface IRes<TData = unknown, TTokens = unknown> extends IResMessage {
   data?: TData;
-  tokens?: TToken;
+  tokens?: TTokens;
 }

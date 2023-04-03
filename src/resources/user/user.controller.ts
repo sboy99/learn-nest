@@ -1,6 +1,6 @@
-import { UseParam, User } from '@/decorators';
+import { User } from '@/decorators';
 import { IRes } from '@/interfaces';
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { User as TUser } from '@prisma/client';
 import { AccessTokenGuard } from '../auth/guards';
 import { UserService } from './user.service';
@@ -27,7 +27,7 @@ export class UserController {
 
   @Get('/:userId')
   async getUser(
-    @UseParam('userId') userId: string,
+    @Param('userId') userId: string,
   ): Promise<IRes<Omit<TUser, 'password'>> | never> {
     const user = await this.userService.getUser(userId);
     delete user.password;
