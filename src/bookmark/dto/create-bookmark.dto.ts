@@ -1,6 +1,8 @@
+import { Trim } from '@/decorators';
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateBookmarkDto {
+  @Trim()
   @MinLength(2, {
     message: 'Title is too short',
   })
@@ -15,6 +17,7 @@ export class CreateBookmarkDto {
   })
   title: string;
 
+  @Trim()
   @MinLength(15, {
     message: 'Description should have atleast 15 chars',
   })
@@ -26,6 +29,7 @@ export class CreateBookmarkDto {
   })
   description: string;
 
+  @Trim()
   @IsString({
     message: 'URl should be a string',
   })

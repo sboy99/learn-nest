@@ -59,13 +59,24 @@ export class BookmarkController {
       data: bookmark,
     };
   }
-
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
+    @User('userId') userId: string,
     @Body() updateBookmarkDto: UpdateBookmarkDto,
-  ) {
-    return this.bookmarkService.update(id, updateBookmarkDto);
+  ): Promise<IRes<Bookmark>> {
+    const uBookmark = await this.bookmarkService.update(
+      id,
+      userId,
+      updateBookmarkDto,
+    );
+    return {
+      code: 'SUCCESS',
+      message: 'Successfully updated bookmark',
+      data: uBookmark,
+    };
   }
 
   @Delete(':id')
