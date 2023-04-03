@@ -1,11 +1,11 @@
+import { AccessTokenGuard } from '@/auth/guards';
 import { User } from '@/decorators';
 import { IRes } from '@/interfaces';
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { User as TUser } from '@prisma/client';
-import { AccessTokenGuard } from '../auth/guards';
 import { UserService } from './user.service';
 
-@Controller('api/v1/users')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

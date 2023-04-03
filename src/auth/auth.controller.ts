@@ -1,5 +1,4 @@
 import { ReqInfo, User } from '@/decorators';
-import { SigninDto, SignupDto } from '@/dto';
 import { IJwtUser, IReqInfo, IRes, ITokens } from '@/interfaces';
 import {
   Body,
@@ -11,9 +10,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { SigninDto, SignupDto } from './dto';
 import { AccessTokenGuard, RefreshTokenGuard } from './guards';
 
-@Controller('api/v1/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
   /**
