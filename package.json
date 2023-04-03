@@ -40,7 +40,8 @@
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "stripe": "^11.17.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
