@@ -40,8 +40,26 @@ export class BookmarkService {
     return bookmark;
   }
 
-  update(id: Bookmark['id'], updateBookmarkDto: UpdateBookmarkDto) {
-    return `This action updates a #${id} bookmark`;
+  async update(
+    bookmarkId: Bookmark['id'],
+    userId: IJwtUser['userId'],
+    updateBookmarkDto: UpdateBookmarkDto,
+  ): Promise<Bookmark> {
+    const bookmark = await this.db.bookmark.findFirst({
+      where: {
+        id: bookmarkId,
+        user_id: userId,
+      },
+    });
+    if (!bookmark) throw new NotFoundException('Bookmark not found');
+
+    const mBookmark = await this.db.bookmark.update({
+      where: {
+        id: bookmarkId,
+      },
+      data: updateBookmarkDto,
+    });
+    return mBookmark;
   }
 
   remove(id: Bookmark['id']) {
