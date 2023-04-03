@@ -9,6 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
+    "studio": "prisma studio",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "dev:db:down": "docker compose down",
     "dev:db:up": "docker compose up -d",

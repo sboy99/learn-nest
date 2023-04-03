@@ -1,6 +1,6 @@
 import { DatabaseService } from '@/database/database.service';
 import { SigninDto, SignupDto } from '@/dto';
-import { IAuthRes, IJwtUser, IReqInfo, ITokens } from '@/interfaces';
+import { IJwtUser, IReqInfo, ITokens } from '@/interfaces';
 import {
   ForbiddenException,
   Injectable,
@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { User as TUser } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as bcryptjs from 'bcryptjs';
 
@@ -20,7 +21,9 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async signupLocal(req: IReqInfo, dto: SignupDto): Promise<IAuthRes | never> {
+  async signupLocal(
+    dto: SignupDto,
+  ): Promise<(ITokens & { user: TUser }) | never> {
     const hashPassword = await this.getHashedPassword(dto.password);
     try {
       const user = await this.db.user.create({
@@ -31,11 +34,9 @@ export class AuthService {
         },
       });
       const tokens = await this.getTokens(user.id, user.email);
-      await this.createSession(req, user.id, tokens.refresh_token);
       return {
-        code: 'SUCCESS',
-        message: 'Registration successful',
         ...tokens,
+        user,
       };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -47,7 +48,9 @@ export class AuthService {
     }
   }
 
-  async signinLocal(req: IReqInfo, dto: SigninDto): Promise<IAuthRes | never> {
+  async signinLocal(
+    dto: SigninDto,
+  ): Promise<(ITokens & { user: TUser }) | never> {
     // find user by email address
     const user = await this.db.user.findFirst({
       where: { email: dto.email },
@@ -62,11 +65,9 @@ export class AuthService {
       throw new ForbiddenException('Invalid password');
     }
     const tokens = await this.getTokens(user.id, user.email);
-    await this.createSession(req, user.id, tokens.refresh_token);
     return {
-      code: 'SUCCESS',
-      message: 'Login successful',
       ...tokens,
+      user,
     };
   }
 
@@ -81,26 +82,24 @@ export class AuthService {
    * @param user IJwtPayload
    * @returns
    */
-  async refreshToken(user: IJwtUser): Promise<IAuthRes | never> {
+  async refreshToken(user: IJwtUser): Promise<ITokens | never> {
     const session = await this.db.sessions.findUnique({
       where: {
         user_id: user.userId,
       },
     });
     if (!session) throw new ForbiddenException('Access Denied');
+    console.log(user.refreshToken, '||', session.refresh_token);
     const hasValidRefreshToken = await this.comparePassword(
       user.refreshToken,
       session.refresh_token,
     );
+    console.log(hasValidRefreshToken);
+
     if (!hasValidRefreshToken || session.is_blocked) {
       throw new UnauthorizedException('You are not authorized');
     }
-    const tokens = await this.getTokens(user.userId, user.email);
-    return {
-      code: 'SUCCESS',
-      message: 'token refreshed',
-      ...tokens,
-    };
+    return this.getTokens(user.userId, user.email);
   }
   /**
    * Get Access and Refresh tokens
@@ -132,7 +131,8 @@ export class AuthService {
   }
 
   async createSession(req: IReqInfo, user_id: string, refresh_token: string) {
-    const hashRt = await this.getHashedPassword(refresh_token);
+    const hashRt = await this.getHashedPassword(String(refresh_token));
+    console.log({ refresh_token, hashRt });
     return this.db.sessions.upsert({
       where: {
         user_id,
