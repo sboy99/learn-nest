@@ -39,10 +39,15 @@ export class BookmarkController {
       data: bookmark,
     };
   }
-
+  @HttpCode(HttpStatus.OK)
   @Get()
-  findAll() {
-    return this.bookmarkService.findAll();
+  async findAll(): Promise<IRes<Bookmark[]>> {
+    const bookmarks = await this.bookmarkService.findAll();
+    return {
+      code: 'SUCCESS',
+      message: `Successfully found ${bookmarks.length} bookmarks`,
+      data: bookmarks,
+    };
   }
 
   @Get(':id')
