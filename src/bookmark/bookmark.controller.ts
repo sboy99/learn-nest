@@ -1,4 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { AccessTokenGuard } from '@/auth/guards';
+import { User } from '@/decorators';
+import { IJwtUser, IRes } from '@/interfaces';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { Bookmark } from '@prisma/client';
 import { BookmarkService } from './bookmark.service';
 import { CreateBookmarkDto } from './dto/create-bookmark.dto';
 import { UpdateBookmarkDto } from './dto/update-bookmark.dto';
@@ -7,9 +22,22 @@ import { UpdateBookmarkDto } from './dto/update-bookmark.dto';
 export class BookmarkController {
   constructor(private readonly bookmarkService: BookmarkService) {}
 
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.CREATED)
   @Post()
-  create(@Body() createBookmarkDto: CreateBookmarkDto) {
-    return this.bookmarkService.create(createBookmarkDto);
+  async create(
+    @User('userId') userId: IJwtUser['userId'],
+    @Body() createBookmarkDto: CreateBookmarkDto,
+  ): Promise<IRes<Bookmark>> {
+    const bookmark = await this.bookmarkService.create(
+      createBookmarkDto,
+      userId,
+    );
+    return {
+      code: 'SUCCESS',
+      message: 'Successfully created new bookmark',
+      data: bookmark,
+    };
   }
 
   @Get()
@@ -23,7 +51,10 @@ export class BookmarkController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBookmarkDto: UpdateBookmarkDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateBookmarkDto: UpdateBookmarkDto,
+  ) {
     return this.bookmarkService.update(+id, updateBookmarkDto);
   }
 
