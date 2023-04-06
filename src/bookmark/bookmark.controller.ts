@@ -1,5 +1,5 @@
-import { AccessTokenGuard } from '@/auth/guards';
-import { User } from '@/decorators';
+import { AccessTokenGuard, RolesGuard } from '@/auth/guards';
+import { AllowedRoles, User } from '@/decorators';
 import { IJwtUser, IRes } from '@/interfaces';
 import {
   Body,
@@ -22,16 +22,17 @@ import { UpdateBookmarkDto } from './dto/update-bookmark.dto';
 export class BookmarkController {
   constructor(private readonly bookmarkService: BookmarkService) {}
 
-  @UseGuards(AccessTokenGuard)
+  @AllowedRoles('MAINTAINER', 'ADMIN')
+  @UseGuards(AccessTokenGuard, RolesGuard)
   @HttpCode(HttpStatus.CREATED)
   @Post()
   async create(
     @User('userId') userId: IJwtUser['userId'],
-    @Body() createBookmarkDto: CreateBookmarkDto,
+    @Body() createBookmarkDto: CreateBookmarkDto
   ): Promise<IRes<Bookmark>> {
     const bookmark = await this.bookmarkService.create(
       createBookmarkDto,
-      userId,
+      userId
     );
     return {
       code: 'SUCCESS',
@@ -65,12 +66,12 @@ export class BookmarkController {
   async update(
     @Param('id') id: string,
     @User('userId') userId: string,
-    @Body() updateBookmarkDto: UpdateBookmarkDto,
+    @Body() updateBookmarkDto: UpdateBookmarkDto
   ): Promise<IRes<Bookmark>> {
     const uBookmark = await this.bookmarkService.update(
       id,
       userId,
-      updateBookmarkDto,
+      updateBookmarkDto
     );
     return {
       code: 'SUCCESS',
@@ -83,7 +84,7 @@ export class BookmarkController {
   @HttpCode(HttpStatus.OK)
   async remove(
     @Param('id') id: string,
-    @User('userId') userId: IJwtUser['userId'],
+    @User('userId') userId: IJwtUser['userId']
   ): Promise<IRes> {
     await this.bookmarkService.remove(id, userId);
     return {

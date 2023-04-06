@@ -20,7 +20,7 @@ export class UserService {
    * }
    */
   async handleShowUser(
-    userId: string,
+    userId: string
   ): Promise<Pick<TUser, 'id' | 'email' | 'username'> | never> {
     const user = await this.db.user.findUnique({
       where: {
@@ -30,11 +30,12 @@ export class UserService {
         id: true,
         email: true,
         username: true,
+        role: true,
       },
     });
     if (!user)
       throw new UnauthorizedException(
-        'You are unauthorized to access this route',
+        'You are unauthorized to access this route'
       );
     return user;
   }
