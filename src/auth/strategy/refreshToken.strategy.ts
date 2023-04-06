@@ -8,7 +8,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
-  'check-refresh-token',
+  'check-refresh-token'
 ) {
   constructor(config: ConfigService) {
     super({
@@ -18,11 +18,15 @@ export class RefreshTokenStrategy extends PassportStrategy(
     });
   }
 
-  validate(req: Request, payload: { sub: string; email: string }): IJwtUser {
+  validate(
+    req: Request,
+    payload: { sub: string; email: string; role: IJwtUser['role'] }
+  ): IJwtUser {
     const refreshToken = req.get('authorization').replace('Bearer', '').trim();
     return {
       userId: payload.sub,
       email: payload.email,
+      role: payload.role,
       refreshToken,
     };
   }
