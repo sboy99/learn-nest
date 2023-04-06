@@ -31,6 +31,7 @@ model User {
   password   String
   first_name String?
   last_name  String?
+  role       Roles      @default(USER)
   Bookmark   Bookmark[]
   Sessions   Sessions?
   created_at DateTime   @default(now())
@@ -50,4 +51,10 @@ model Bookmark {
   updated_at  DateTime @updatedAt()
 
   @@map("bookmarks")
+}
+
+enum Roles {
+  USER
+  MAINTAINER
+  ADMIN
 }
