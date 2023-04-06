@@ -1,5 +1,8 @@
+import { User } from '@prisma/client';
+
 export interface IJwtUser {
-  userId: string;
-  email: string;
+  userId: User['id'];
+  email: User['email'];
+  role: User['role'];
   refreshToken?: string;
 }

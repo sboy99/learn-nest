@@ -9,7 +9,7 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('/')
+  @Get()
   async getAllUsers(): Promise<
     | (IRes<Pick<TUser, 'id' | 'email' | 'username' | 'created_at'>[]> & {
         count: number;
@@ -24,10 +24,17 @@ export class UserController {
       data: users,
     };
   }
+  @Get('me')
+  @UseGuards(AccessTokenGuard)
+  async showUser(
+    @User('userId') userId: string
+  ): Promise<Pick<TUser, 'id' | 'email' | 'username'> | never> {
+    return this.userService.handleShowUser(userId);
+  }
 
-  @Get('/:userId')
+  @Get(':id')
   async getUser(
-    @Param('userId') userId: string,
+    @Param('id') userId: string
   ): Promise<IRes<Omit<TUser, 'password'>> | never> {
     const user = await this.userService.getUser(userId);
     delete user.password;
@@ -36,13 +43,5 @@ export class UserController {
       message: 'Success',
       data: user,
     };
-  }
-
-  @Get('me')
-  @UseGuards(AccessTokenGuard)
-  async showUser(
-    @User('userId') userId: string,
-  ): Promise<Pick<TUser, 'id' | 'email' | 'username'> | never> {
-    return this.userService.handleShowUser(userId);
   }
 }
