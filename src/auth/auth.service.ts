@@ -18,11 +18,11 @@ export class AuthService {
   constructor(
     private db: DatabaseService,
     private jwt: JwtService,
-    private config: ConfigService,
+    private config: ConfigService
   ) {}
 
   async signupLocal(
-    dto: SignupDto,
+    dto: SignupDto
   ): Promise<(ITokens & { user: TUser }) | never> {
     const hashPassword = await this.getHashedPassword(dto.password);
     try {
@@ -33,7 +33,7 @@ export class AuthService {
           password: hashPassword,
         },
       });
-      const tokens = await this.getTokens(user.id, user.email);
+      const tokens = await this.getTokens(user.id, user.email, user.role);
       return {
         ...tokens,
         user,
@@ -49,7 +49,7 @@ export class AuthService {
   }
 
   async signinLocal(
-    dto: SigninDto,
+    dto: SigninDto
   ): Promise<(ITokens & { user: TUser }) | never> {
     // find user by email address
     const user = await this.db.user.findFirst({
@@ -64,7 +64,7 @@ export class AuthService {
     if (!valid) {
       throw new ForbiddenException('Invalid password');
     }
-    const tokens = await this.getTokens(user.id, user.email);
+    const tokens = await this.getTokens(user.id, user.email, user.role);
     return {
       ...tokens,
       user,
@@ -91,13 +91,13 @@ export class AuthService {
     if (!session) throw new ForbiddenException('Access Denied');
     const hasValidRefreshToken = await this.comparePassword(
       user.refreshToken.split('.')[2], // as last section of jwt changes so this is getting targeted due to limitation of bcrypt
-      session.refresh_token,
+      session.refresh_token
     );
 
     if (!hasValidRefreshToken || session.is_blocked) {
       throw new UnauthorizedException('You are not authorized');
     }
-    return this.getTokens(user.userId, user.email);
+    return this.getTokens(user.userId, user.email, user.role);
   }
   /**
    * Get Access and Refresh tokens
@@ -105,10 +105,15 @@ export class AuthService {
    * @param email string
    * @returns ITokens: {access_token:string,refresh_token:string}
    */
-  private async getTokens(userId: string, email: string): Promise<ITokens> {
+  private async getTokens(
+    userId: string,
+    email: string,
+    userRole: TUser['role']
+  ): Promise<ITokens> {
     const payload = {
       sub: userId,
       email: email,
+      role: userRole,
     };
 
     const [at, rt] = await Promise.all([

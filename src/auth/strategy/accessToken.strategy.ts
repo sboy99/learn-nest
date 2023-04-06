@@ -8,7 +8,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(
   Strategy,
-  'check-access-token',
+  'check-access-token'
 ) {
   constructor(config: ConfigService, private readonly db: DatabaseService) {
     super({
@@ -17,10 +17,15 @@ export class AccessTokenStrategy extends PassportStrategy(
     });
   }
 
-  validate(payload: { sub: string; email: string }): IJwtUser {
+  validate(payload: {
+    sub: string;
+    email: string;
+    role: IJwtUser['role'];
+  }): IJwtUser {
     return {
       userId: payload.sub,
       email: payload.email,
+      role: payload.role,
     };
   }
 }
