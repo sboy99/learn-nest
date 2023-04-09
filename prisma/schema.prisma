@@ -10,6 +10,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Bookmark {
+  id          String   @id() @default(uuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id])
+  title       String
+  description String?
+  url         String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt()
+
+  @@map("bookmarks")
+}
+
+//=Ecommerce==// 
+
 model Sessions {
   id            Int      @id() @default(autoincrement())
   user          User     @relation(fields: [user_id], references: [id])
@@ -25,36 +40,194 @@ model Sessions {
 }
 
 model User {
-  id         String     @id @default(uuid())
-  username   String
-  email      String     @unique()
-  password   String
-  first_name String?
-  last_name  String?
-  role       Roles      @default(USER)
-  Bookmark   Bookmark[]
-  Sessions   Sessions?
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt()
+  id              String           @id() @default(uuid())
+  username        String
+  email           String           @unique()
+  password        String
+  first_name      String?
+  last_name       String?
+  role            Roles            @default(USER)
+  Bookmark        Bookmark[]
+  Sessions        Sessions?
+  UserAddress     UserAddress[]
+  UserPayment     UserPayment[]
+  OrderDetails    OrderDetails?
+  ShoppingSession ShoppingSession?
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt()
 
   @@map("users")
-}
-
-model Bookmark {
-  id          String   @id @default(uuid())
-  user_id     String
-  user        User     @relation(fields: [user_id], references: [id])
-  title       String
-  description String?
-  url         String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt()
-
-  @@map("bookmarks")
 }
 
 enum Roles {
   USER
   MAINTAINER
   ADMIN
+}
+
+model UserAddress {
+  id            String  @id() @default(uuid())
+  user_id       String  @unique()
+  User          User    @relation(fields: [user_id], references: [id])
+  address_line1 String
+  address_line2 String?
+  city          String
+  postal_code   String
+  country       String
+  telephone     String?
+  mobile        String
+
+  @@map("user_address")
+}
+
+//=> Shopping
+
+model ShoppingSession {
+  id         String     @id() @default(uuid())
+  user_id    String     @unique()
+  User       User       @relation(fields: [user_id], references: [id])
+  total      Int        @default(0)
+  CartItem   CartItem[]
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt()
+
+  @@map("shopping_session")
+}
+
+model CartItem {
+  id                  String          @id() @default(uuid())
+  shopping_session_id String
+  ShoppingSession     ShoppingSession @relation(fields: [shopping_session_id], references: [id])
+  product_id          String
+  Product             Product         @relation(fields: [product_id], references: [id])
+  quantity            Int             @default(1)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt()
+
+  @@unique([shopping_session_id, product_id])
+  @@map("cart_item")
+}
+
+//=> Product Management
+model Product {
+  id               String            @id() @default(uuid())
+  name             String
+  desc             String
+  SKU              String
+  price            Int
+  ProductCategory  ProductCategory[]
+  ProductInventory ProductInventory?
+  OrderItem        OrderItem?
+  CartItem         CartItem[]
+  is_deleted       Boolean           @default(false)
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt()
+  deleted_at       DateTime?
+
+  @@map("products")
+}
+
+model ProductCategory {
+  id         String    @id() @default(uuid())
+  product_id String    @unique()
+  product    Product   @relation(fields: [product_id], references: [id])
+  name       String
+  desc       String
+  is_deleted Boolean   @default(false)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt()
+  deleted_at DateTime?
+
+  @@map("product_category")
+}
+
+model ProductInventory {
+  id         String    @id() @default(uuid())
+  product_id String    @unique()
+  product    Product   @relation(fields: [product_id], references: [id])
+  quantity   Int       @default(0)
+  is_deleted Boolean   @default(false)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt()
+  deleted_at DateTime?
+
+  @@map("product_inventory")
+}
+
+//=> Discount
+
+model Discount {
+  id               String    @id() @default(uuid())
+  name             String
+  desc             String
+  discount_percent Int?
+  is_active        Boolean   @default(true)
+  is_deleted       Boolean   @default(false)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt()
+  deleted_at       DateTime?
+
+  @@map("discounts")
+}
+
+//=> Orders
+
+model OrderDetails {
+  id             String          @id() @default(uuid())
+  user_id        String          @unique()
+  User           User            @relation(fields: [user_id], references: [id])
+  total          Int             @default(0)
+  payment_id     String          @unique()
+  PaymentDetails PaymentDetails?
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt()
+  OrderItem      OrderItem?
+
+  @@map("order_details")
+}
+
+model OrderItem {
+  id         String       @id() @default(uuid())
+  order_id   String       @unique()
+  Order      OrderDetails @relation(fields: [order_id], references: [id])
+  product_id String       @unique()
+  Product    Product      @relation(fields: [product_id], references: [id])
+  quantity   Int
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt()
+
+  @@map("order_items")
+}
+
+//=> Payment
+
+model PaymentDetails {
+  id         String        @id() @default(uuid())
+  order_id   String        @unique()
+  Order      OrderDetails  @relation(fields: [order_id], references: [id])
+  amount     Int
+  provider   String
+  status     PaymentStatus @default(PENDING)
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt()
+
+  @@map("payment_details")
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFULL
+  FAILED
+}
+
+model UserPayment {
+  id           String   @id() @default(uuid())
+  user_id      String   @unique()
+  User         User     @relation(fields: [user_id], references: [id])
+  payment_type String
+  provider     String
+  account_no   String
+  expiry       DateTime
+
+  @@map("user_payment_methods")
 }
