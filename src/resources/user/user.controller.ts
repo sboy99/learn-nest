@@ -1,6 +1,6 @@
-import { AccessTokenGuard } from '@/auth/guards';
 import { User } from '@/decorators';
 import { IRes } from '@/interfaces';
+import { AccessTokenGuard } from '@/resources/auth/guards';
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { User as TUser } from '@prisma/client';
 import { UserService } from './user.service';
