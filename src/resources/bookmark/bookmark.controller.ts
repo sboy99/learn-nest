@@ -1,6 +1,6 @@
-import { AccessTokenGuard, RolesGuard } from '@/auth/guards';
 import { AllowedRoles, User } from '@/decorators';
 import { IJwtUser, IRes } from '@/interfaces';
+import { AccessTokenGuard, RolesGuard } from '@/resources/auth/guards';
 import {
   Body,
   Controller,

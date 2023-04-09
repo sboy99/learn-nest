@@ -3,7 +3,6 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { User as TUser } from '@prisma/client';
 
@@ -31,12 +30,27 @@ export class UserService {
         email: true,
         username: true,
         role: true,
+        ShoppingSession: {
+          select: {
+            id: true,
+            total: true,
+            CartItem: {
+              select: {
+                Product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                  },
+                },
+                quantity: true,
+              },
+            },
+          },
+        },
       },
     });
-    if (!user)
-      throw new UnauthorizedException(
-        'You are unauthorized to access this route'
-      );
+    if (!user) throw new NotFoundException('user does not exist');
     return user;
   }
 

@@ -31,6 +31,9 @@ export class AuthService {
           username: dto.username,
           email: dto.email,
           password: hashPassword,
+          ShoppingSession: {
+            create: {},
+          },
         },
       });
       const tokens = await this.getTokens(user.id, user.email, user.role);
