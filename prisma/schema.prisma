@@ -51,7 +51,7 @@ model User {
   Sessions        Sessions?
   UserAddress     UserAddress[]
   UserPayment     UserPayment[]
-  OrderDetails    OrderDetails?
+  OrderDetails    OrderDetails[]
   ShoppingSession ShoppingSession?
   created_at      DateTime         @default(now())
   updated_at      DateTime         @updatedAt()
@@ -117,7 +117,7 @@ model Product {
   price            Int
   ProductCategory  ProductCategory[]
   ProductInventory ProductInventory?
-  OrderItem        OrderItem?
+  OrderItem        OrderItem[]
   CartItem         CartItem[]
   is_deleted       Boolean           @default(false)
   created_at       DateTime          @default(now())
@@ -173,43 +173,44 @@ model Discount {
 //=> Orders
 
 model OrderDetails {
-  id             String          @id() @default(uuid())
-  user_id        String          @unique()
-  User           User            @relation(fields: [user_id], references: [id])
-  total          Int             @default(0)
-  payment_id     String          @unique()
-  PaymentDetails PaymentDetails?
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt()
-  OrderItem      OrderItem?
+  id             String         @id() @default(uuid())
+  user_id        String
+  User           User           @relation(fields: [user_id], references: [id])
+  total          Int            @default(0)
+  payment_id     String         @unique()
+  PaymentDetails PaymentDetails @relation(fields: [payment_id], references: [id])
+  OrderItem      OrderItem[]
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt()
 
   @@map("order_details")
 }
 
 model OrderItem {
-  id         String       @id() @default(uuid())
-  order_id   String       @unique()
-  Order      OrderDetails @relation(fields: [order_id], references: [id])
-  product_id String       @unique()
-  Product    Product      @relation(fields: [product_id], references: [id])
-  quantity   Int
-  created_at DateTime     @default(now())
-  updated_at DateTime     @updatedAt()
+  id           String       @id() @default(uuid())
+  order_id     String
+  OrderDetails OrderDetails @relation(fields: [order_id], references: [id])
+  product_id   String
+  Product      Product      @relation(fields: [product_id], references: [id])
+  quantity     Int
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt()
 
+  @@unique([order_id, product_id])
   @@map("order_items")
 }
 
 //=> Payment
 
 model PaymentDetails {
-  id         String        @id() @default(uuid())
-  order_id   String        @unique()
-  Order      OrderDetails  @relation(fields: [order_id], references: [id])
-  amount     Int
-  provider   String
-  status     PaymentStatus @default(PENDING)
-  created_at DateTime      @default(now())
-  updated_at DateTime      @updatedAt()
+  id                String        @id() @default(uuid())
+  amount            Int
+  payment_intent_id String
+  provider          String
+  status            PaymentStatus @default(PENDING)
+  OrderDetails      OrderDetails?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt()
 
   @@map("payment_details")
 }
