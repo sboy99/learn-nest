@@ -10,6 +10,8 @@ import { InventoryModule } from './resources/inventory/inventory.module';
 import { ProductModule } from './resources/product/product.module';
 import { UserModule } from './resources/user/user.module';
 import { UserService } from './resources/user/user.service';
+import { OrderModule } from './resources/order/order.module';
+import { PaymentModule } from './resources/payment/payment.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { UserService } from './resources/user/user.service';
     CartModule,
     InventoryModule,
     UtilityModule,
+    OrderModule,
+    PaymentModule,
   ],
   providers: [UserService, UtilityService],
 })
